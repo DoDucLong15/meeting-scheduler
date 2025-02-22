@@ -4,6 +4,7 @@ import { LogoutLink, useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs"
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import MeetingType from "./meeting-type/page";
 
 function Dashboard() {
   const db = getFirestore(app);
@@ -32,8 +33,7 @@ function Dashboard() {
 
   return (
     <div>
-      Dashboard
-      <LogoutLink>Logout</LogoutLink>
+      <MeetingType />
     </div>
     
   )

@@ -18,7 +18,7 @@ function Header() {
         </ul>
         <div className="flex gap-5">
           <LoginLink><Button variant="ghost">Login</Button></LoginLink>
-          <RegisterLink><Button>Get Started</Button></RegisterLink>
+          <RegisterLink><Button>Register</Button></RegisterLink>
         </div>
       </div>
     </div>
