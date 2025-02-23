@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import DashboardHeader from "./_components/DashboardHeader";
 import SideNavBar from "./_components/SideNavBar";
 
@@ -13,6 +14,7 @@ function DashboardLayout({
       </div>
       <div className="md:ml-64">
         <DashboardHeader />
+        <Toaster />
         {children}
         </div>
     </div>
