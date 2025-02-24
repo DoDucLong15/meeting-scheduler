@@ -31,7 +31,7 @@ function SideNavBar() {
     {
       id: 3,
       name: "Availability",
-      path: "/dashboard/avalability",
+      path: "/dashboard/availability",
       icon: Clock,
     },
     {
