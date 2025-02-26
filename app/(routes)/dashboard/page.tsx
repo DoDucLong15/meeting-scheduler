@@ -20,10 +20,7 @@ function Dashboard() {
     const docRef = doc(db, "Business", user.email);
     const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      console.log("Document data:", docSnap.data());
-    } else {
-      console.log("No such document!");
+    if (!docSnap.exists()) {
       router.replace('/create-business');
     }
     setLoading(false);
