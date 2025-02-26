@@ -18,13 +18,11 @@ function CreateBusiness() {
   const router = useRouter();
 
   const onCreateBusiness = async () => {
-    console.log(businessName);
     await setDoc(doc(db, 'Business', user.email), {
       businessName: businessName,
       email: user.email,
       userName: user.given_name + ' ' + user.family_name
     }).then((res) => {
-      console.log('Document saved');
       toast('Business created successfully');
       router.replace('/dashboard');
     })

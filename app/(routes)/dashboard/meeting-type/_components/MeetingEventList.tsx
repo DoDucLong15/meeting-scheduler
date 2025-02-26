@@ -7,6 +7,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
   orderBy,
@@ -24,8 +25,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { BusinessType } from "@/app/_utils/types/business.type";
 
-type MeetingEventItem = {
+export type MeetingEventItem = {
   businessId: string | any;
   createdBy: string;
   duration: number;
@@ -40,9 +42,11 @@ function MeetingEventList() {
   const db = getFirestore(app);
   const { user } = useKindeBrowserClient();
   const [eventList, setEventList] = useState<MeetingEventItem[]>([]);
+  const [businessInfo, setBusinessInfo] = useState<BusinessType>();
 
   useEffect(() => {
     user && getEventList();
+    user && getBusinessInfo();
   }, [user]);
 
   const onDeleteMeetingEvent = async (event: MeetingEventItem) => {
@@ -64,6 +68,21 @@ function MeetingEventList() {
       querySnapshot.docs.map((doc) => doc.data() as MeetingEventItem)
     );
   };
+
+  const getBusinessInfo = async () => {
+    const docRef = doc(db, "Business", user?.email);
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()) {
+      setBusinessInfo(docSnap.data() as BusinessType);
+    }
+  }
+
+  const onCopyClickHandler = (event: MeetingEventItem) => {
+    const meetingEventUrl = process.env.NEXT_PUBLIC_BASE_URL + '/' + businessInfo?.businessName + '/' + event.id;
+    navigator.clipboard.writeText(meetingEventUrl);
+    toast("Url copied on Clipboard");
+  }
+
   return (
     <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
       {eventList.length > 0 ? (
@@ -110,8 +129,7 @@ function MeetingEventList() {
                 <h2
                   className="flex gap-2 text-sm items-center text-primary cursor-pointer"
                   onClick={() => {
-                    navigator.clipboard.writeText(event.locationUrl);
-                    toast("Url copied on Clipboard");
+                    onCopyClickHandler(event);
                   }}
                 >
                   <Copy className="h-4 w-4" />
