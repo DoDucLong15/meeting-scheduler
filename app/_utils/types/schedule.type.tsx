@@ -3,6 +3,8 @@ export type ScheduleType = {
   businessEmail: string;
   selectedTime: string;
   selectedDate: Date;
+  formattedDate: string;
+  formattedTimestamp: string;
   duration: number;
   locationUrl: string;
   eventId: string;

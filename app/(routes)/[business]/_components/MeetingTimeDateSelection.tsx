@@ -12,9 +12,21 @@ import { format } from "date-fns";
 import TimeDateSelection from "./TimeDateSelection";
 import UserFormInfo from "./UserFormInfo";
 import { toast } from "sonner";
-import { collection, doc, getDocs, getFirestore, query, setDoc, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  getFirestore,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { app } from "@/config/FirebaseConfig";
 import { ScheduleType } from "@/app/_utils/types/schedule.type";
+import Plunk from "@plunk/node";
+import { render } from "@react-email/components";
+import Email from "@/emails";
+import { useRouter } from "next/navigation";
 
 function MeetingTimeDateSelection({
   eventInfo,
@@ -31,8 +43,12 @@ function MeetingTimeDateSelection({
   const [userName, setUserName] = useState<string | undefined>();
   const [userEmail, setUserEmail] = useState<string | undefined>();
   const [userNote, setUserNote] = useState<string | undefined>();
-  const [prevBusinessBooking, setPrevBusinessBooking] = useState<ScheduleType[]>([]);
+  const [prevBusinessBooking, setPrevBusinessBooking] = useState<
+    ScheduleType[]
+  >([]);
   const db = getFirestore(app);
+  const plunk = new Plunk(process.env.NEXT_PUBLIC_PLUNK_API_KEY ?? "");
+  const router = useRouter();
 
   useEffect(() => {
     eventInfo?.duration && createTimeslot(eventInfo?.duration);
@@ -51,30 +67,33 @@ function MeetingTimeDateSelection({
   };
 
   const handleScheduleEvent = async () => {
-    if(userEmail) {
+    if (userEmail) {
       const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if(!regex.test(userEmail)) {
+      if (!regex.test(userEmail)) {
         toast.error("Enter valid email address");
         return;
       }
       const docId = Date.now().toString();
-      await setDoc(doc(db, 'ScheduledMeetings', docId), {
+      await setDoc(doc(db, "ScheduledMeetings", docId), {
         businessName: businessInfo?.businessName,
         businessEmail: businessInfo?.email,
         selectedTime: selectedTime,
         selectedDate: date,
+        formattedDate: format(date, "PPP"),
+        formattedTimestamp: format(date, "t"),
         duration: eventInfo?.duration,
         locationUrl: eventInfo?.locationUrl,
         eventId: eventInfo?.id,
         id: docId,
         userEmail: userEmail,
         userName: userName,
-        userNote: userNote ?? ""
+        userNote: userNote ?? "",
       }).then((res) => {
-        toast("Meeting Scheduled successfully!")
-      })
+        toast("Meeting Scheduled successfully!");
+        sendEmail();
+      });
     }
-  }
+  };
 
   const createTimeslot = (interval: number) => {
     const startTime = 8 * 60;
@@ -93,18 +112,42 @@ function MeetingTimeDateSelection({
     setTimeSlots(slots);
   };
 
+  const sendEmail = async () => {
+    const emailHtml = await render(
+      <Email
+        userFirstName={businessInfo?.businessName}
+        loginDate={date}
+        loginDevice={eventInfo?.duration.toString()}
+        loginLocation={eventInfo?.locationType}
+        loginIp={selectedTime ?? ""}
+      />
+    );
+
+    userEmail && plunk.emails.send({
+      to: userEmail,
+      subject: "Meeting Scheduled Details",
+      body: emailHtml,
+    }).then((res) => {
+      router.replace('/confirmation');
+    });
+  };
+
   /**
    * Used to Fetch Previous Booking for the same event
-   * @param _date 
+   * @param _date
    */
 
   const getPrevEventBooking = async (_date: Date) => {
-    const q = query(collection(db, 'ScheduledMeetings'), where('selectedDate', '==', _date), where('eventId', '==', eventInfo?.id));
+    const q = query(
+      collection(db, "ScheduledMeetings"),
+      where("selectedDate", "==", _date),
+      where("eventId", "==", eventInfo?.id)
+    );
     const docSnap = await getDocs(q);
     docSnap.forEach((doc) => {
-      setPrevBusinessBooking(prev => [...prev, doc.data() as ScheduleType]);
-    })
-  }
+      setPrevBusinessBooking((prev) => [...prev, doc.data() as ScheduleType]);
+    });
+  };
 
   return (
     <div
@@ -177,7 +220,10 @@ function MeetingTimeDateSelection({
             Next
           </Button>
         ) : (
-          <Button disabled={!userEmail || !userName} onClick={handleScheduleEvent}>
+          <Button
+            disabled={!userEmail || !userName}
+            onClick={handleScheduleEvent}
+          >
             Schedule
           </Button>
         )}
